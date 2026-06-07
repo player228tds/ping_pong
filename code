@@ -59,11 +59,17 @@ class Player(GameSprite):
         elif ball_rect.rect.y <= (self.height / 2):
             needed_pos = 0
         
-        if ball_rect.rect.x >= widht_ds / 2:
+        if ball_rect.rect.x >= widht_ds / 2 and ball_rect.dx > 0:
             if self.rect.y > needed_pos:
-                self.rect.y -= self.speed
+                self.rect.y -= self.speed / 1.5
             if self.rect.y < needed_pos:
-                self.rect.y += self.speed
+                self.rect.y += self.speed / 1.5
+        
+        if ball_rect.rect.x <= widht_ds / 2:
+            if self.rect.y > needed_pos:
+                self.rect.y -= self.speed / 4
+            if self.rect.y < needed_pos:
+                self.rect.y += self.speed / 4
             
             
     
@@ -157,7 +163,6 @@ while game:
     
         for line in list_line:
             line.draw(wind)
-
     
 
     pygame.display.update()
