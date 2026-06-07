@@ -75,8 +75,6 @@ class Ball(GameSprite):
             self.dx *= -1
         if self.colliderect(rect2.rect):
             self.dx *= -1
-        #надо сделать так что-бы шар при столкновении с боковой частью игрока меняля свои вектора (dy *= -1 и dx *= -1)
-        if self.rect.y < rect1.rect.y + rect1.height
     
     def set_no_lose(self):
         self.no_lose = True
