@@ -2,7 +2,6 @@ import pygame
 
 class GameSprite():
     def __init__(self, x, y, width, height, color = None):
-        # Создаем прямоугольник (хитбокс)
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
         self.rect.x = x
@@ -10,7 +9,6 @@ class GameSprite():
         self.height = height
 
     def draw(self, surface):
-        # Рисуем спрайт как прямоугольник
         pygame.draw.rect(surface, self.color, self.rect)
     
     def collidepoint(self, x, y):
@@ -51,6 +49,23 @@ class Player(GameSprite):
             self.rect.y -= self.speed
         if Keys_pressed[pygame.K_DOWN] and not (self.rect.y == height_ds - self.height):
             self.rect.y += self.speed
+        
+    def bot_play(self, ball_rect):
+        needed_pos = 0
+        if not (ball_rect.rect.y >= (height_ds - (self.height / 2))) and not (ball_rect.rect.y <= (self.height / 2)):
+            needed_pos = ball_rect.rect.y - (self.height / 2)
+        elif ball_rect.rect.y >= (height_ds - (self.height / 2)):
+            needed_pos = height_ds - self.height
+        elif ball_rect.rect.y <= (self.height / 2):
+            needed_pos = 0
+        
+        if ball_rect.rect.x >= widht_ds / 2:
+            if self.rect.y > needed_pos:
+                self.rect.y -= self.speed
+            if self.rect.y < needed_pos:
+                self.rect.y += self.speed
+            
+            
     
 
 class Ball(GameSprite):
@@ -110,30 +125,39 @@ player1 = Player(0, 100, 10, 90, (255, 255, 255))
 player2 = Player(widht_ds - 10, 100, 10, 90, (255, 255, 255))
 players = [player1, player2]
 ball = Ball(10, 100, 10, 10, 5, (255, 0, 0))
-aa = GameSprite(0, 0, 500, 500, (255, 0, 255))
 
 xz = 0
+list_line = []
+for i in range(25):
+    line = GameSprite(widht_ds / 2, xz, 5, 10, (125, 125, 125))
+    xz += 20
+    list_line.append(line)
+
+playing_game = True
 while game:
     current_time = pygame.time.get_ticks()
+
     wind.fill((0, 0, 0))
     mouse_pos = pygame.mouse.get_pos()
-    mouse_click_pos = None # Сбрасываем клик каждый кадр
+    mouse_click_pos = None 
 
-    # Обработка выхода
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
             game = False
 
-    player1.update_keyboardws2()
-    player1.draw(wind)
+    if playing_game:
+        player1.update_keyboardws1()
+        player1.draw(wind)
 
-    player2.update_mouse()
-    player2.draw(wind)
+        player2.bot_play(ball)
+        player2.draw(wind)
 
+        ball.draw(wind)
+        ball.update(players)
+    
+        for line in list_line:
+            line.draw(wind)
 
-    ball.draw(wind)
-    ball.update(players)
-    ball.set_no_lose()
     
 
     pygame.display.update()
