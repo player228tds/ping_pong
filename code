@@ -75,6 +75,23 @@ class Ball(GameSprite):
             self.dx *= -1
         if self.colliderect(rect2.rect):
             self.dx *= -1
+        
+        if self.rect.y >= height_ds:
+            self.dy *= -1
+
+        if self.rect.y <= 0:
+            self.dy *= -1
+
+        if self.no_lose and self.rect.x >= widht_ds:
+            self.dx *= -1
+
+        if self.no_lose and self.rect.x <= 0:
+            self.dx *= -1
+        
+        #if self.colliderect(rect1.rect) and self.rect.y < rect1.rect.y + rect1.height:
+            #self.dy *= -1
+        #if self.colliderect(rect1.rect) and self.rect.y + self.height < rect1.rect.y:
+            #self.dy *= -1
     
     def set_no_lose(self):
         self.no_lose = True
@@ -120,4 +137,4 @@ while game:
     
 
     pygame.display.update()
-    clock.tick(60)
+    clock.tick(10)
