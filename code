@@ -1,4 +1,6 @@
 import pygame
+import time
+import random
 
 class GameSprite():
     def __init__(self, x, y, width, height, color = None):
@@ -18,7 +20,7 @@ class GameSprite():
         return self.rect.colliderect(rect)
 
 class Player(GameSprite):
-    def __init__(self, x, y, width, height, color = None):
+    def __init__(self, x, y, width, height, movement, color = None):
         super().__init__(x, y, width, height, color = None)
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
@@ -27,6 +29,7 @@ class Player(GameSprite):
         self.height = height
         self.width = width
         self.speed = 5
+        self.movement = movement
         
     def update_mouse(self):
         if not (mouse_pos[1] >= (height_ds - (self.height / 2))) and not (mouse_pos[1] <= (self.height / 2)):
@@ -61,16 +64,25 @@ class Player(GameSprite):
         
         if ball_rect.rect.x >= widht_ds / 2 and ball_rect.dx > 0:
             if self.rect.y > needed_pos:
-                self.rect.y -= self.speed / 1.5
+                self.rect.y -= self.speed
             if self.rect.y < needed_pos:
-                self.rect.y += self.speed / 1.5
+                self.rect.y += self.speed
         
         if ball_rect.rect.x <= widht_ds / 2:
             if self.rect.y > needed_pos:
                 self.rect.y -= self.speed / 4
             if self.rect.y < needed_pos:
-                self.rect.y += self.speed / 4
-            
+                self.rect.y += self.speed / 2
+    
+    def move(self, ball):
+        if self.movement == 'key1':
+            self.update_keyboardws1()
+        if self.movement == 'key2':
+            self.update_keyboardws2()
+        if self.movement == 'bot':
+            self.bot_play(ball)
+        if self.movement == 'mouse':
+            self.update_mouse()    
             
     
 
@@ -86,16 +98,15 @@ class Ball(GameSprite):
         self.dx = speed
         self.dy = speed
         self.no_lose = False
+        self.start = True
+        self.select_pl = player1
+        self.time = 0
     
-    def update(self, listt):
+    def move(self, listt):
         rect1 = listt[0]
         rect2 = listt[1]
         self.rect.x += self.dx
         self.rect.y += self.dy
-        if self.colliderect(rect1.rect):
-            self.dx *= -1
-        if self.colliderect(rect2.rect):
-            self.dx *= -1
         
         if self.rect.y >= height_ds:
             self.dy *= -1
@@ -109,13 +120,97 @@ class Ball(GameSprite):
         if self.no_lose and self.rect.x <= 0:
             self.dx *= -1
         
-        #if self.colliderect(rect1.rect) and self.rect.y < rect1.rect.y + rect1.height:
-            #self.dy *= -1
-        #if self.colliderect(rect1.rect) and self.rect.y + self.height < rect1.rect.y:
-            #self.dy *= -1
+        if self.colliderect(rect1.rect):
+            if self.rect.x + self.width / 2 < rect1.rect.x + rect1.width:
+                if self.rect.y + self.height > rect1.rect.y:
+                    self.dy *= -1
+                if self.rect.y + self.height < rect1.rect.y:
+                    self.dy *= -1
+            else:
+                self.dx *= -1
+        
+        if self.colliderect(rect2.rect):
+            if self.rect.x + self.width / 2 > rect2.rect.x:
+                if self.rect.y + self.height > rect2.rect.y:
+                    self.dy *= -1
+                if self.rect.y + self.height < rect2.rect.y:
+                    self.dy *= -1
+            else:
+                self.dx *= -1
+
     
     def set_no_lose(self):
         self.no_lose = True
+
+    def update(self, players):
+        Keys_pressed = pygame.key.get_pressed()
+        mouse_buttons = pygame.mouse.get_pressed()
+        players[0] = player1
+        players[1] = player2
+
+        if self.rect.x > widht_ds + 50:
+            self.select_pl = player2
+            self.start = True
+            self.time = current_time
+        if self.rect.x < 0 - 50:
+            self.select_pl = player1
+            self.start = True
+            self.time = current_time
+
+        if self.start:
+            if self.select_pl == player1:
+                self.rect.x = player1.rect.x + 30
+                self.rect.y = player1.rect.y + player1.height / 2
+                self.set_right()
+                if (Keys_pressed[pygame.K_d] and player1.movement == 'key1') or (Keys_pressed[pygame.K_RIGHT] and player1.movement == 'key2') or (mouse_buttons[0] and player1.movement == 'mouse'):
+                    self.start = False
+                    self.set_up()
+                    if random.randint(1, 2) == 1:
+                        self.dy *= -1
+                if player1.movement == 'bot' and (current_time - self.time > 2000):
+                    self.start = False
+                    self.set_up()
+                    if random.randint(1, 2) == 1:
+                        self.dy *= -1
+            
+            if self.select_pl == player2:
+                self.rect.x = player2.rect.x - 30
+                self.rect.y = player2.rect.y + player1.height / 2
+                self.set_left()
+                print(current_time - self.time)
+                if (Keys_pressed[pygame.K_a] and player2.movement == 'key1') or (Keys_pressed[pygame.K_LEFT] and player2.movement == 'key2') or (mouse_buttons[0] and player2.movement == 'mouse'):
+                    self.start = False
+                    self.set_up()
+                    if random.randint(1, 2) == 1:
+                        self.dy *= -1
+                if player2.movement == 'bot' and (current_time - self.time > 2000):
+                    self.start = False
+                    self.set_up()
+                    if random.randint(1, 2) == 1:
+                        self.dy *= -1
+
+        if self.start == False:
+            self.move(players)
+            
+    
+    def set_up(self):
+        if self.dy < 0:
+            self.dy *= -1
+    
+    def set_down(self):
+        if self.dy > 0:
+            self.dy *= -1
+    
+    def set_left(self):
+        if self.dx > 0:
+            self.dx *= -1
+
+    def set_right(self):
+        if self.dx < 0:
+            self.dx *= -1
+        
+
+
 
 pygame.init()
 
@@ -127,10 +222,10 @@ wind.fill((0, 0, 0))
 clock = pygame.time.Clock()
 game = True
 
-player1 = Player(0, 100, 10, 90, (255, 255, 255))
-player2 = Player(widht_ds - 10, 100, 10, 90, (255, 255, 255))
+player1 = Player(0, 100, 10, 90, 'key1',(255, 255, 255))
+player2 = Player(widht_ds - 10, 100, 10, 90, 'bot', (255, 255, 255))
 players = [player1, player2]
-ball = Ball(10, 100, 10, 10, 5, (255, 0, 0))
+ball = Ball(widht_ds / 2, height_ds / 2, 10, 10, 5, (255, 0, 0))
 
 xz = 0
 list_line = []
@@ -138,6 +233,7 @@ for i in range(25):
     line = GameSprite(widht_ds / 2, xz, 5, 10, (125, 125, 125))
     xz += 20
     list_line.append(line)
+
 
 playing_game = True
 while game:
@@ -147,22 +243,23 @@ while game:
     mouse_pos = pygame.mouse.get_pos()
     mouse_click_pos = None 
 
+
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
             game = False
 
+    player1.draw(wind)
+    player2.draw(wind)
+
+    for line in list_line:
+        line.draw(wind)
+
+    ball.draw(wind)
+
     if playing_game:
-        player1.update_keyboardws1()
-        player1.draw(wind)
-
-        player2.bot_play(ball)
-        player2.draw(wind)
-
-        ball.draw(wind)
+        player1.move(ball)
+        player2.move(ball)
         ball.update(players)
-    
-        for line in list_line:
-            line.draw(wind)
     
 
     pygame.display.update()
